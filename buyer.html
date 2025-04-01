@@ -1,0 +1,38 @@
+<!-- Names: Danica, Sydney, Nicole, Tamara -->
+<!-- I pledge my honor that I have abided by the Stevens Honor System -->
+<!-- Exchange for Students Application -->
+<!-- Software Design VI -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buyer's Hub</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Buyer's Hub</h1>
+        <button onclick="location.href='index.html'" class="auth-btn">Home</button>
+    </div>
+    <div class="sidebar">
+        <ul>
+            <li>Dorm</li>
+            <li>Athletics</li>
+            <li>Academics</li>
+            <li>Clothes</li>
+            <li>Miscellaneous</li>
+        </ul>
+    </div>
+    <div class="content">
+        <input type="text" id="buyerSearch" placeholder="Enter your search queries here..." onkeyup="searchItems('buyerSearch', 'buyerItems')">
+        <div class="grid" id="buyerItems">
+            <div class="item">Item 1 - $15.00</div>
+            <div class="item">Item 2 - $12.00</div>
+            <div class="item">Item 3 - $45.00</div>
+            <div class="item">Item 4 - $6.00</div>
+            <div class="item">Item 5 - $11.00</div>
+            <div class="item">Item 6 - $60.00</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
