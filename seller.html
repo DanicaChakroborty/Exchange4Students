@@ -80,15 +80,14 @@
             const itemCategory = document.getElementById('item-category').value;
             const itemImage = document.getElementById('item-image').files[0];
 
-            // Here, you can implement an API call or a local storage method to save the item
-            // For simplicity, we just log the item details to the console
+            //Logs the item details to the console
             console.log('Item posted:', { itemName, itemDescription, itemPrice, itemCategory, itemImage });
 
             // Reset the form
             document.getElementById('newItemForm').reset();
             document.getElementById('postItemForm').style.display = 'none';
 
-            // Optionally, update the list of items in the grid
+            // Update the list of items in the grid
             const newItem = document.createElement('div');
             newItem.className = 'item';
             newItem.innerHTML = `${itemName} - $${itemPrice}`;
