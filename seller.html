@@ -3,7 +3,6 @@
 <!-- Exchange for Students Application -->
 <!-- Software Design VI -->
 
-
 <html>
 <head>
     <title>Seller's Hub</title>
@@ -19,10 +18,43 @@
             <li>Profile</li>
             <li>Past Sales</li>
             <li>New Sales</li>
+            <li><a href="javascript:void(0);" onclick="showPostForm()">Post New Item</a></li> <!-- New Tab for Posting -->
         </ul>
     </div>
     <div class="content">
+        <h2>Post a New Item</h2>
+        
+        <!-- Post Item Form (hidden by default) -->
+        <div id="postItemForm" style="display: none;">
+            <form id="newItemForm" onsubmit="return postItem(event);">
+                <label for="item-name">Item Name:</label><br>
+                <input type="text" id="item-name" name="item-name" required><br><br>
+
+                <label for="item-description">Item Description:</label><br>
+                <textarea id="item-description" name="item-description" rows="4" required></textarea><br><br>
+
+                <label for="item-price">Item Price:</label><br>
+                <input type="number" id="item-price" name="item-price" required><br><br>
+
+                <label for="item-category">Category:</label><br>
+                <select id="item-category" name="item-category" required>
+                    <option value="electronics">Electronics</option>
+                    <option value="furniture">Furniture</option>
+                    <option value="books">Books</option>
+                    <option value="clothing">Clothing</option>
+                    <option value="other">Other</option>
+                </select><br><br>
+
+                <label for="item-image">Item Image:</label><br>
+                <input type="file" id="item-image" name="item-image"><br><br>
+
+                <input type="submit" value="Post Item">
+            </form>
+        </div>
+
+        <h2>Search for Items</h2>
         <input type="text" id="sellerSearch" placeholder="Search for similar items..." onkeyup="searchItems('sellerSearch', 'sellerItems')">
+        
         <div class="grid" id="sellerItems">
             <div class="item">Product A - $15.00</div>
             <div class="item">Product B - $6.00</div>
@@ -32,6 +64,37 @@
             <div class="item">Product F - $40.00</div>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        function showPostForm() {
+            document.getElementById('postItemForm').style.display = 'block';
+        }
+
+        function postItem(event) {
+            // Prevent form from submitting and page from refreshing
+            event.preventDefault();
+
+            const itemName = document.getElementById('item-name').value;
+            const itemDescription = document.getElementById('item-description').value;
+            const itemPrice = document.getElementById('item-price').value;
+            const itemCategory = document.getElementById('item-category').value;
+            const itemImage = document.getElementById('item-image').files[0];
+
+            // Here, you can implement an API call or a local storage method to save the item
+            // For simplicity, we just log the item details to the console
+            console.log('Item posted:', { itemName, itemDescription, itemPrice, itemCategory, itemImage });
+
+            // Reset the form
+            document.getElementById('newItemForm').reset();
+            document.getElementById('postItemForm').style.display = 'none';
+
+            // Optionally, update the list of items in the grid
+            const newItem = document.createElement('div');
+            newItem.className = 'item';
+            newItem.innerHTML = `${itemName} - $${itemPrice}`;
+            document.getElementById('sellerItems').appendChild(newItem);
+        }
+    </script>
 </body>
 </html>
+
