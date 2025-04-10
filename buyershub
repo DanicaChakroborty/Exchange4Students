@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buyer's Hub</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f8f8;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auth-btn {
+            padding: 8px 12px;
+        }
+
+        #buyerSearch {
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        .sidebar {
+            float: left;
+            width: 15%;
+            padding: 20px;
+        }
+
+        .content {
+            margin-left: 15%;
+            padding: 20px;
+        }
+
+        .banner {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .item {
+            width: 150px;
+            text-align: center;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .item img {
+            width: 100%;
+            height: auto;
+            margin-bottom: 8px;
+        }
+
+        /* CSS to remove link underline and maintain color */
+        .item-link {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Buyer's Hub</h1>
+        <div class="top-right">
+            <button onclick="location.href='buyershub.html'" class="auth-btn">Home</button>
+            <input type="text" id="buyerSearch" placeholder="Search items..." onkeyup="searchItems(event)">
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="banner">Categories</div>
+        <ul>
+            <li><a href="dorm.html">Dorm</a></li>
+            <li><a href="athletics.html">Athletics</a></li>
+            <li><a href="academics.html">Academics</a></li>
+            <li><a href="clothes.html">Clothes</a></li>
+            <li><a href="misc.html">Miscellaneous</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <div class="banner">Most Relevant Items</div>
+        <div class="grid" id="buyerItems">
+            <a href="item1.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder1.jpg" alt="Pillow">
+                    <div>Pillow - $15.00</div>
+                </div>
+            </a>
+            <a href="item2.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder2.jpg" alt="Desk Lamp">
+                    <div>Desk Lamp - $12.00</div>
+                </div>
+            </a>
+            <a href="item3.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder3.jpg" alt="Soccer Ball">
+                    <div>Soccer Ball - $45.00</div>
+                </div>
+            </a>
+            <a href="item4.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder4.jpg" alt="Knee Guards">
+                    <div>Knee Guards - $16.00</div>
+                </div>
+            </a>
+            <a href="item5.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder5.jpg" alt="Mechanical Pencils">
+                    <div>Mechanical Pencils - $11.00</div>
+                </div>
+            </a>
+            <a href="item6.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder6.jpg" alt="Textbook">
+                    <div>Textbook - $60.00</div>
+                </div>
+            </a>
+            <a href="item7.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder7.jpg" alt="Protractor Set">
+                    <div>Protractor Set - $8.00</div>
+                </div>
+            </a>
+            <a href="item8.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder8.jpg" alt="Academic Planner">
+                    <div>Academic Planner - $25.00</div>
+                </div>
+            </a>
+            <a href="item9.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder9.jpg" alt="Stevens Jersey">
+                    <div>Stevens Jersey - $30.00</div>
+                </div>
+            </a>
+            <a href="item10.html" class="item-link">
+                <div class="item">
+                    <img src="placeholder10.jpg" alt="Wii Remote">
+                    <div>Wii Remote - $22.00</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function searchItems(event) {
+            // Prevent default form submission behavior when pressing Enter
+            event.preventDefault();
+
+            // Get the search input value and convert it to lowercase
+            const input = document.getElementById('buyerSearch').value.toLowerCase();
+            const items = document.getElementsByClassName('item');
+            let found = false; // To track if any item is found
+
+            // Loop through all items and toggle their display based on the search input
+            for (let item of items) {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(input)) {
+                    item.style.display = '';
+                    found = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            }
+
+            // Redirect to item page if exact match (without case sensitivity)
+            if (input === 'pillow') location.href = 'item1.html';
+            if (input === 'desk lamp') location.href = 'item2.html';
+            if (input === 'soccer ball') location.href = 'item3.html';
+            if (input === 'knee guards') location.href = 'item4.html';
+            if (input === 'mechanical pencils') location.href = 'item5.html';
+            if (input === 'textbook') location.href = 'item6.html';
+            if (input === 'protractor set') location.href = 'item7.html';
+            if (input === 'academic planner') location.href = 'item8.html';
+            if (input === 'stevens jersey') location.href = 'item9.html';
+            if (input === 'wii remote') location.href = 'item10.html';
+
+            // If no items match, show an alert message
+            if (!found && input !== '') {
+                alert("No items found matching your search.");
+            }
+        }
+
+        // Attach the function to the 'Enter' key event
+        document.getElementById('buyerSearch').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                searchItems(event); // Call searchItems on Enter key press
+            }
+        });
+    </script>
+</body>
+</html>
