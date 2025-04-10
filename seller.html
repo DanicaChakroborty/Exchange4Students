@@ -93,6 +93,15 @@
             newItem.innerHTML = `${itemName} - $${itemPrice}`;
             document.getElementById('sellerItems').appendChild(newItem);
         }
+
+        function searchItems(inputId, containerId) {
+            const input = document.getElementById(inputId).value.toLowerCase();
+            const items = document.getElementById(containerId).getElementsByClassName('item');
+            for (let i = 0; i < items.length; i++) {
+                const text = items[i].textContent.toLowerCase();
+                items[i].style.display = text.includes(input) ? "block" : "none";
+            }
+        }
     </script>
 </body>
 </html>
