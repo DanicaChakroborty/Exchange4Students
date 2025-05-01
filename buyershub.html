@@ -80,15 +80,39 @@
             text-decoration: none;
             color: inherit;
         }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .badge {
+            display: inline-block;
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Buyer's Hub</h1>
         <div class="top-right">
-            <a href="marketplacehome.html" class="auth-btn" style="text-decoration:none;">
-    <button>Home</button>
-</a>
+            <a href="index.html" class="auth-btn" style="text-decoration:none;">
+                <button>Home</button>
+            </a>
+            <button onclick="viewCart()" class="auth-btn" id="cart-btn">Cart <span id="cart-count" class="badge">0</span></button>
+            <button onclick="viewNotifications()" class="auth-btn" id="notifications-btn">Notifications <span id="notification-count" class="badge">0</span></button>
             <input type="text" id="buyerSearch" placeholder="Search items..." onkeyup="searchItems(event)">
         </div>
     </div>
@@ -107,113 +131,167 @@
     <div class="content">
         <div class="banner">Most Relevant Items</div>
         <div class="grid" id="buyerItems">
-            <a href="item1.html" class="item-link">
-                <div class="item">
-                    <img src="pillow.jpg" alt="Pillow">
-                    <div>Pillow - $15.00</div>
-                </div>
-            </a>
-            <a href="item2.html" class="item-link">
-                <div class="item">
-                    <img src="lamp.jpg" alt="Desk Lamp">
-                    <div>Desk Lamp - $12.00</div>
-                </div>
-            </a>
-            <a href="item3.html" class="item-link">
-                <div class="item">
-                    <img src="soccerball.jpg" alt="Soccer Ball">
-                    <div>Soccer Ball - $45.00</div>
-                </div>
-            </a>
-            <a href="item4.html" class="item-link">
-                <div class="item">
-                    <img src="kneeguards.jpg" alt="Knee Guards">
-                    <div>Knee Guards - $16.00</div>
-                </div>
-            </a>
-            <a href="item5.html" class="item-link">
-                <div class="item">
-                    <img src="pencils.jpg" alt="Mechanical Pencils">
-                    <div>Mechanical Pencils - $11.00</div>
-                </div>
-            </a>
-            <a href="item6.html" class="item-link">
-                <div class="item">
-                    <img src="textbook.jpg" alt="Textbook">
-                    <div>Textbook - $60.00</div>
-                </div>
-            </a>
-            <a href="item7.html" class="item-link">
-                <div class="item">
-                    <img src="protractor.jpg" alt="Protractor Set">
-                    <div>Protractor Set - $8.00</div>
-                </div>
-            </a>
-            <a href="item8.html" class="item-link">
-                <div class="item">
-                    <img src="academicplanner.jpg" alt="Academic Planner">
-                    <div>Academic Planner - $25.00</div>
-                </div>
-            </a>
-            <a href="item9.html" class="item-link">
-                <div class="item">
-                    <img src="jersey.jpg" alt="Stevens Jersey">
-                    <div>Stevens Jersey - $30.00</div>
-                </div>
-            </a>
-            <a href="item10.html" class="item-link">
-                <div class="item">
-                    <img src="wii.jpg" alt="Wii Remote">
-                    <div>Wii Remote - $22.00</div>
-                </div>
-            </a>
+            <!-- Items will be loaded dynamically from the database -->
+            <div id="loading">Loading items...</div>
         </div>
     </div>
-
+    
+    <div id="notification" class="notification"></div>
+    
     <script>
+        // Check if user is logged in
+        function checkAuth() {
+            fetch('/api/user')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        // Not logged in, hide cart/notification buttons
+                        document.getElementById('cart-btn').style.display = 'none';
+                        document.getElementById('notifications-btn').style.display = 'none';
+                        return null;
+                    }
+                })
+                .then(data => {
+                    if (data) {
+                        // User is logged in, update counts
+                        updateCartCount();
+                        updateNotificationCount();
+                    }
+                    
+                    // Load items regardless of login status
+                    loadItems();
+                })
+                .catch(error => {
+                    console.error('Authentication check error:', error);
+                    loadItems(); // Still load items even if auth check fails
+                });
+        }
+        
+        // Load items from database
+        function loadItems() {
+            fetch('/api/items')
+                .then(response => response.json())
+                .then(items => {
+                    const container = document.getElementById('buyerItems');
+                    container.innerHTML = ''; // Clear loading
+                    
+                    if (items.length === 0) {
+                        container.innerHTML = '<p>No items available at the moment.</p>';
+                        return;
+                    }
+                    
+                    items.forEach(item => {
+                        const itemElement = document.createElement('a');
+                        itemElement.href = `/item.html?id=${item.id}`;
+                        itemElement.className = 'item-link';
+                        
+                        itemElement.innerHTML = `
+                            <div class="item">
+                                <img src="${item.image_url || 'placeholder.jpg'}" alt="${item.title}">
+                                <div>${item.title} - $${item.price.toFixed(2)}</div>
+                            </div>
+                        `;
+                        
+                        container.appendChild(itemElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading items:', error);
+                    document.getElementById('buyerItems').innerHTML = '<p>Error loading items. Please try again later.</p>';
+                });
+        }
+        
+        // Search items
         function searchItems(event) {
             // Prevent default form submission behavior when pressing Enter
-            event.preventDefault();
-
-            // Get the search input value and convert it to lowercase
-            const input = document.getElementById('buyerSearch').value.toLowerCase();
-            const items = document.getElementsByClassName('item');
-            let found = false; // To track if any item is found
-
-            // Loop through all items and toggle their display based on the search input
-            for (let item of items) {
-                const text = item.textContent.toLowerCase();
-                if (text.includes(input)) {
-                    item.style.display = '';
-                    found = true;
-                } else {
-                    item.style.display = 'none';
-                }
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault();
             }
-
-            // Redirect to item page if exact match (without case sensitivity)
-            if (input === 'pillow') location.href = 'item1.html';
-            if (input === 'desk lamp') location.href = 'item2.html';
-            if (input === 'soccer ball') location.href = 'item3.html';
-            if (input === 'knee guards') location.href = 'item4.html';
-            if (input === 'mechanical pencils') location.href = 'item5.html';
-            if (input === 'textbook') location.href = 'item6.html';
-            if (input === 'protractor set') location.href = 'item7.html';
-            if (input === 'academic planner') location.href = 'item8.html';
-            if (input === 'stevens jersey') location.href = 'item9.html';
-            if (input === 'wii remote') location.href = 'item10.html';
-
-            // If no items match, show an alert message
-            if (!found && input !== '') {
-                alert("No items found matching your search.");
+            
+            const query = document.getElementById('buyerSearch').value.trim();
+            
+            if (query.length === 0) {
+                loadItems(); // Load all items if search is empty
+                return;
             }
+            
+            fetch(`/api/items/search/${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(items => {
+                    const container = document.getElementById('buyerItems');
+                    container.innerHTML = ''; // Clear previous results
+                    
+                    if (items.length === 0) {
+                        container.innerHTML = '<p>No items found matching your search.</p>';
+                        return;
+                    }
+                    
+                    items.forEach(item => {
+                        const itemElement = document.createElement('a');
+                        itemElement.href = `/item.html?id=${item.id}`;
+                        itemElement.className = 'item-link';
+                        
+                        itemElement.innerHTML = `
+                            <div class="item">
+                                <img src="${item.image_url || 'placeholder.jpg'}" alt="${item.title}">
+                                <div>${item.title} - $${item.price.toFixed(2)}</div>
+                            </div>
+                        `;
+                        
+                        container.appendChild(itemElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error searching items:', error);
+                    document.getElementById('buyerItems').innerHTML = '<p>Error searching items. Please try again later.</p>';
+                });
         }
-
-        // Attach the function to the 'Enter' key event
-        document.getElementById('buyerSearch').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                searchItems(event); // Call searchItems on Enter key press
-            }
+        
+        // Update cart count
+        function updateCartCount() {
+            fetch('/api/cart')
+                .then(response => response.json())
+                .then(data => {
+                    let count = 0;
+                    if (data.items) {
+                        count = data.items.reduce((sum, item) => sum + item.quantity, 0);
+                    }
+                    document.getElementById('cart-count').textContent = count;
+                    document.getElementById('cart-count').style.display = count > 0 ? 'inline-block' : 'none';
+                })
+                .catch(error => {
+                    console.error('Error updating cart count:', error);
+                });
+        }
+        
+        // Update notification count
+        function updateNotificationCount() {
+            fetch('/api/notifications/unread')
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.length;
+                    document.getElementById('notification-count').textContent = count;
+                    document.getElementById('notification-count').style.display = count > 0 ? 'inline-block' : 'none';
+                })
+                .catch(error => {
+                    console.error('Error updating notification count:', error);
+                });
+        }
+        
+        // View cart
+        function viewCart() {
+            window.location.href = '/cart.html';
+        }
+        
+        // View notifications
+        function viewNotifications() {
+            window.location.href = '/notifications.html';
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
         });
     </script>
 </body>

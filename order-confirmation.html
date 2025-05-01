@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Confirmation - Student Marketplace</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .order-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .order-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background-color: #FFC107;
+            color: #333;
+        }
+        
+        .status-processing {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .status-completed {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .status-cancelled {
+            background-color: #F44336;
+            color: white;
+        }
+        
+        .order-items {
+            margin-bottom: 20px;
+        }
+        
+        .order-item {
+            display: flex;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .order-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        .order-item-details {
+            flex: 1;
+        }
+        
+        .order-summary {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .continue-btn {
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .continue-btn:hover {
+            background-color: #aa0000;
+        }
+        
+        .loading, .error {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+        }
+        
+        .error {
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Student Marketplace - Order Confirmation</h1>
+        <div class="top-right">
+            <button onclick="location.href='buyershub.html'" class="auth-btn">Home</button>
+            <button onclick="location.href='notifications.html'" class="auth-btn" id="notifications-btn">Notifications <span id="notification-count">0</span></button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="banner" style="font-weight: bold; font-size: 24px;">Order Confirmation</div>
+        <div id="order-container">
+            <div class="loading">Loading your order details...</div>
+        </div>
+    </div>
+    
+    <script>
+        // Get order ID from URL query parameters
+        function getOrderId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+        
+        // Check if user is logged in
+        function checkAuth() {
+            fetch('/api/user')
+                .then(response => {
+                    if (!response.ok) {
+                        alert('Please log in to view your order');
+                        window.location.href = '/login.html';
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // User is logged in, load order
+                    const orderId = getOrderId();
+                    if (orderId) {
+                        loadOrder(orderId);
+                    } else {
+                        document.getElementById('order-container').innerHTML = `
+                            <div class="error">
+                                <p>No order ID provided.</p>
+                                <button onclick="location.href='buyershub.html'" class="continue-btn">Continue Shopping</button>
+                            </div>
+                        `;
+                    }
+                    updateNotificationCount();
+                })
+                .catch(error => {
+                    console.error('Authentication error:', error);
+                });
+        }
+        
+        // Load order details
+        function loadOrder(orderId) {
+            fetch(`/api/orders/${orderId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load order');
+                    }
+                    return response.json();
+                })
+                .then(order => {
+                    const container = document.getElementById('order-container');
+                    
+                    let statusClass = '';
+                    switch (order.status) {
+                        case 'pending':
+                            statusClass = 'status-pending';
+                            break;
+                        case 'processing':
+                            statusClass = 'status-processing';
+                            break;
+                        case 'completed':
+                            statusClass = 'status-completed';
+                            break;
+                        case 'cancelled':
+                            statusClass = 'status-cancelled';
+                            break;
+                    }
+                    
+                    // Format date
+                    const orderDate = new Date(order.created_at).toLocaleDateString();
+                    const orderTime = new Date(order.created_at).toLocaleTimeString();
+                    
+                    let orderHTML = `
+                        <div class="order-container">
+                            <div class="order-header">
+                                <div>
+                                    <h2>Order #${order.id}</h2>
+                                    <p>Placed on ${orderDate} at ${orderTime}</p>
+                                </div>
+                                <div class="order-status ${statusClass}">
+                                    ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                </div>
+                            </div>
+                            
+                            <h3>Items</h3>
+                            <div class="order-items">
+                    `;
+                    
+                    // Add each item
+                    order.items.forEach(item => {
+                        orderHTML += `
+                            <div class="order-item">
+                                <img src="${item.image_url || 'placeholder.jpg'}" alt="${item.title}" class="order-item-image">
+                                <div class="order-item-details">
+                                    <h4>${item.title}</h4>
+                                    <p>Price: $${item.price_at_purchase.toFixed(2)}</p>
+                                    <p>Quantity: ${item.quantity}</p>
+                                    <p>Total: $${(item.price_at_purchase * item.quantity).toFixed(2)}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    // Add order summary
+                    orderHTML += `
+                            </div>
+                            
+                            <div class="order-summary">
+                                <h3>Order Summary</h3>
+                                <p><strong>Total Items:</strong> ${order.items.reduce((sum, item) => sum + item.quantity, 0)}</p>
+                                <p><strong>Total Price:</strong> $${order.total_amount.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 20px;">
+                            <p>Thank you for your order!</p>
+                            <button onclick="location.href='buyershub.html'" class="continue-btn">Continue Shopping</button>
+                        </div>
+                    `;
+                    
+                    container.innerHTML = orderHTML;
+                })
+                .catch(error => {
+                    console.error('Error loading order:', error);
+                    document.getElementById('order-container').innerHTML = `
+                        <div class="error">
+                            <p>Error loading order details. Please try again later.</p>
+                            <button onclick="location.href='buyershub.html'" class="continue-btn">Continue Shopping</button>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Update notification count
+        function updateNotificationCount() {
+            fetch('/api/notifications/unread')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('notification-count').textContent = data.length;
+                })
+                .catch(error => {
+                    console.error('Error updating notification count:', error);
+                });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

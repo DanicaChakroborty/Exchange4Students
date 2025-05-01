@@ -1,108 +1,677 @@
-<!-- Names: Danica, Sydney, Nicole, Tamara -->
-<!-- I pledge my honor that I have abided by the Stevens Honor System -->
-<!-- Exchange for Students Application -->
-<!-- Software Design VI -->
-
+<!DOCTYPE html>
 <html>
 <head>
     <title>Seller's Hub</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .content-panel {
+            display: none;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            color: #333;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        .sidebar li {
+            cursor: pointer;
+        }
+
+        .sidebar li.active {
+            font-weight: bold;
+            color: #cc0000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .submit-btn {
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .seller-item {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 5px 10px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background-color: #2196F3;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .order-item {
+            background-color: #f0f0f0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background-color: #FFC107;
+            color: #333;
+        }
+
+        .status-processing {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .status-completed {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .status-cancelled {
+            background-color: #F44336;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
         <h1>Seller's Hub</h1>
-        <button onclick="location.href='marketplacehome.html'" class="auth-btn">Home</button>
+        <div class="top-right">
+            <button onclick="location.href='index.html'" class="auth-btn">Home</button>
+            <button onclick="viewNotifications()" class="auth-btn" id="notifications-btn">Notifications <span id="notification-count" class="badge">0</span></button>
+        </div>
     </div>
     <div class="sidebar">
         <ul>
-            <li>Profile</li>
-            <li>Past Sales</li>
-            <li>New Sales</li>
-            <li><a href="javascript:void(0);" onclick="showPostForm()">Post New Item</a></li> <!-- New Tab for Posting -->
+            <li data-panel="profile" onclick="showPanel('profile')">Profile</li>
+            <li data-panel="my-items" onclick="showPanel('my-items')">My Items</li>
+            <li data-panel="orders" onclick="showPanel('orders')">Orders</li>
+            <li data-panel="post-item" onclick="showPanel('post-item')">Post New Item</li>
         </ul>
     </div>
     <div class="content">
-        <h2>Post a New Item</h2>
+        <!-- Profile Panel -->
+        <div id="profile-panel" class="content-panel">
+            <h2>My Profile</h2>
+            <div id="profile-content">
+                <div class="form-group">
+                    <label for="profile-username">Username</label>
+                    <input type="text" id="profile-username" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="profile-email">Email</label>
+                    <input type="email" id="profile-email" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="profile-role">Role</label>
+                    <input type="text" id="profile-role" readonly>
+                </div>
+            </div>
+        </div>
         
-        <!-- Post Item Form (hidden by default) -->
-        <div id="postItemForm" style="display: none;">
-            <form id="newItemForm" onsubmit="return postItem(event);">
-                <label for="item-name">Item Name:</label><br>
-                <input type="text" id="item-name" name="item-name" required><br><br>
-
-                <label for="item-description">Item Description:</label><br>
-                <textarea id="item-description" name="item-description" rows="4" required></textarea><br><br>
-
-                <label for="item-price">Item Price:</label><br>
-                <input type="number" id="item-price" name="item-price" required><br><br>
-
-                <label for="item-category">Category:</label><br>
-                <select id="item-category" name="item-category" required>
-                    <option value="electronics">Electronics</option>
-                    <option value="furniture">Furniture</option>
-                    <option value="books">Books</option>
-                    <option value="clothing">Clothing</option>
-                    <option value="other">Other</option>
-                </select><br><br>
-
-                <label for="item-image">Item Image:</label><br>
-                <input type="file" id="item-image" name="item-image"><br><br>
-
-                <input type="submit" value="Post Item">
+        <!-- My Items Panel -->
+        <div id="my-items-panel" class="content-panel">
+            <h2>My Items</h2>
+            <div id="my-items-content">
+                <div id="my-items-loading">Loading your items...</div>
+            </div>
+        </div>
+        
+        <!-- Orders Panel -->
+        <div id="orders-panel" class="content-panel">
+            <h2>Orders</h2>
+            <div id="orders-content">
+                <div id="orders-loading">Loading your orders...</div>
+            </div>
+        </div>
+        
+        <!-- Post Item Panel -->
+        <div id="post-item-panel" class="content-panel">
+            <h2>Post a New Item</h2>
+            <form id="post-item-form" onsubmit="submitItem(event)">
+                <div class="form-group">
+                    <label for="item-title">Title</label>
+                    <input type="text" id="item-title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-description">Description</label>
+                    <textarea id="item-description" name="description" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-price">Price ($)</label>
+                    <input type="number" id="item-price" name="price" step="0.01" min="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-category">Category</label>
+                    <select id="item-category" name="category" required>
+                        <option value="dorm">Dorm</option>
+                        <option value="athletics">Athletics</option>
+                        <option value="academics">Academics</option>
+                        <option value="clothes">Clothes</option>
+                        <option value="misc">Miscellaneous</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-condition">Condition</label>
+                    <select id="item-condition" name="condition" required>
+                        <option value="New">New</option>
+                        <option value="Like New">Like New</option>
+                        <option value="Very Good">Very Good</option>
+                        <option value="Good">Good</option>
+                        <option value="Acceptable">Acceptable</option>
+                        <option value="Poor">Poor</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="item-image">Image</label>
+                    <input type="file" id="item-image" name="image" accept="image/*">
+                </div>
+                
+                <button type="submit" class="submit-btn">Post Item</button>
             </form>
         </div>
-
-        <h2>Search for Items</h2>
-        <input type="text" id="sellerSearch" placeholder="Search for similar items..." onkeyup="searchItems('sellerSearch', 'sellerItems')">
-        
-        <div class="grid" id="sellerItems">
-            <div class="item">Product A - $15.00</div>
-            <div class="item">Product B - $6.00</div>
-            <div class="item">Product C - $8.00</div>
-            <div class="item">Product D - $11.00</div>
-            <div class="item">Product E - $24.00</div>
-            <div class="item">Product F - $40.00</div>
-        </div>
     </div>
-
+    
+    <div id="notification" class="notification"></div>
+    
     <script>
-        function showPostForm() {
-            document.getElementById('postItemForm').style.display = 'block';
+        // Check if user is logged in
+        function checkAuth() {
+            fetch('/api/user')
+                .then(response => {
+                    if (!response.ok) {
+                        alert('Please log in to access the Seller Hub');
+                        window.location.href = '/login.html';
+                        throw new Error('Not authenticated');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Check if user is a seller
+                    if (data.role !== 'seller' && data.role !== 'both') {
+                        alert('You must be registered as a seller to access this page');
+                        window.location.href = '/index.html';
+                        throw new Error('Not a seller');
+                    }
+                    
+                    // Load user profile
+                    document.getElementById('profile-username').value = data.username;
+                    document.getElementById('profile-email').value = data.email;
+                    document.getElementById('profile-role').value = data.role;
+                    
+                    // Update notification count
+                    updateNotificationCount();
+                    
+                    // Show default panel
+                    showPanel('my-items');
+                })
+                .catch(error => {
+                    console.error('Authentication error:', error);
+                });
         }
-
-        function postItem(event) {
-            // Prevent form from submitting and page from refreshing
-            event.preventDefault();
-
-            const itemName = document.getElementById('item-name').value;
-            const itemDescription = document.getElementById('item-description').value;
-            const itemPrice = document.getElementById('item-price').value;
-            const itemCategory = document.getElementById('item-category').value;
-            const itemImage = document.getElementById('item-image').files[0];
-
-            //Logs the item details to the console
-            console.log('Item posted:', { itemName, itemDescription, itemPrice, itemCategory, itemImage });
-
-            // Reset the form
-            document.getElementById('newItemForm').reset();
-            document.getElementById('postItemForm').style.display = 'none';
-
-            // Update the list of items in the grid
-            const newItem = document.createElement('div');
-            newItem.className = 'item';
-            newItem.innerHTML = `${itemName} - $${itemPrice}`;
-            document.getElementById('sellerItems').appendChild(newItem);
-        }
-
-        function searchItems(inputId, containerId) {
-            const input = document.getElementById(inputId).value.toLowerCase();
-            const items = document.getElementById(containerId).getElementsByClassName('item');
-            for (let i = 0; i < items.length; i++) {
-                const text = items[i].textContent.toLowerCase();
-                items[i].style.display = text.includes(input) ? "block" : "none";
+        
+        // Show panel
+        function showPanel(panelId) {
+            // Hide all panels
+            const panels = document.querySelectorAll('.content-panel');
+            panels.forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active class from sidebar items
+            const sidebarItems = document.querySelectorAll('.sidebar li');
+            sidebarItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected panel
+            const selectedPanel = document.getElementById(`${panelId}-panel`);
+            if (selectedPanel) {
+                selectedPanel.classList.add('active');
+                
+                // Add active class to sidebar item
+                const sidebarItem = document.querySelector(`.sidebar li[data-panel="${panelId}"]`);
+                if (sidebarItem) {
+                    sidebarItem.classList.add('active');
+                }
+                
+                // Load data for the panel if needed
+                if (panelId === 'my-items') {
+                    loadMyItems();
+                } else if (panelId === 'orders') {
+                    loadOrders();
+                }
             }
         }
+        
+        // Load seller's items
+        function loadMyItems() {
+            const container = document.getElementById('my-items-content');
+            container.innerHTML = '<div id="my-items-loading">Loading your items...</div>';
+            
+            fetch('/api/items')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load items');
+                    }
+                    return response.json();
+                })
+                .then(items => {
+                    // Filter to only show current user's items
+                    // Note: In a real app with proper authentication,
+                    // we would have a specific endpoint for this
+                    
+                    if (items.length === 0) {
+                        container.innerHTML = '<p>You have not listed any items yet.</p>';
+                        return;
+                    }
+                    
+                    let itemsHTML = '';
+                    
+                    items.forEach(item => {
+                        itemsHTML += `
+                            <div class="seller-item" data-id="${item.id}">
+                                <img src="${item.image_url || 'placeholder.jpg'}" alt="${item.title}" class="item-image">
+                                <div class="item-details">
+                                    <h3>${item.title}</h3>
+                                    <p><strong>Price:</strong> $${item.price.toFixed(2)}</p>
+                                    <p><strong>Category:</strong> ${item.category}</p>
+                                    <p><strong>Condition:</strong> ${item.condition}</p>
+                                    <div class="item-actions">
+                                        <button onclick="editItem(${item.id})" class="edit-btn">Edit</button>
+                                        <button onclick="deleteItem(${item.id})" class="delete-btn">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = itemsHTML;
+                })
+                .catch(error => {
+                    console.error('Error loading items:', error);
+                    container.innerHTML = '<p>Error loading your items. Please try again later.</p>';
+                });
+        }
+        
+        // Load orders for items sold by this seller
+        function loadOrders() {
+            const container = document.getElementById('orders-content');
+            container.innerHTML = '<div id="orders-loading">Loading your orders...</div>';
+            
+            fetch('/api/seller/orders')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load orders');
+                    }
+                    return response.json();
+                })
+                .then(orders => {
+                    if (orders.length === 0) {
+                        container.innerHTML = '<p>You have no orders yet.</p>';
+                        return;
+                    }
+                    
+                    let ordersHTML = '';
+                    
+                    orders.forEach(order => {
+                        let statusClass = '';
+                        switch (order.status) {
+                            case 'pending':
+                                statusClass = 'status-pending';
+                                break;
+                            case 'processing':
+                                statusClass = 'status-processing';
+                                break;
+                            case 'completed':
+                                statusClass = 'status-completed';
+                                break;
+                            case 'cancelled':
+                                statusClass = 'status-cancelled';
+                                break;
+                        }
+                        
+                        const orderDate = new Date(order.created_at).toLocaleDateString();
+                        
+                        ordersHTML += `
+                            <div class="order-item" data-id="${order.id}">
+                                <div class="order-header">
+                                    <div>
+                                        <h3>Order #${order.id}</h3>
+                                        <p>Placed on ${orderDate} by ${order.buyer_name}</p>
+                                    </div>
+                                    <div class="order-status ${statusClass}">
+                                        ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                    </div>
+                                </div>
+                                
+                                <h4>Items in this order:</h4>
+                                <ul>
+                        `;
+                        
+                        let orderTotal = 0;
+                        order.items.forEach(item => {
+                            const itemTotal = item.price_at_purchase * item.quantity;
+                            orderTotal += itemTotal;
+                            
+                            ordersHTML += `
+                                <li>
+                                    ${item.title} - $${item.price_at_purchase.toFixed(2)} x ${item.quantity} = $${itemTotal.toFixed(2)}
+                                </li>
+                            `;
+                        });
+                        
+                        ordersHTML += `
+                                </ul>
+                                <p><strong>Total:</strong> $${orderTotal.toFixed(2)}</p>
+                                
+                                <div class="order-actions">
+                                    <label for="status-${order.id}">Update Status:</label>
+                                    <select id="status-${order.id}">
+                                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="completed" ${order.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    </select>
+                                    <button onclick="updateOrderStatus(${order.id})" class="submit-btn">Update</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = ordersHTML;
+                })
+                .catch(error => {
+                    console.error('Error loading orders:', error);
+                    container.innerHTML = '<p>Error loading your orders. Please try again later.</p>';
+                });
+        }
+        
+        // Update order status
+        function updateOrderStatus(orderId) {
+            const statusSelect = document.getElementById(`status-${orderId}`);
+            const newStatus = statusSelect.value;
+            
+            fetch(`/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update order status');
+                }
+                return response.json();
+            })
+            .then(data => {
+                showNotification('Order status updated successfully');
+                loadOrders(); // Reload orders to reflect the change
+            })
+            .catch(error => {
+                console.error('Error updating order status:', error);
+                showNotification('Error updating order status', 'error');
+            });
+        }
+        
+        // Submit new item
+        function submitItem(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('item-title').value);
+            formData.append('description', document.getElementById('item-description').value);
+            formData.append('price', document.getElementById('item-price').value);
+            formData.append('category', document.getElementById('item-category').value);
+            formData.append('condition', document.getElementById('item-condition').value);
+            
+            const imageFile = document.getElementById('item-image').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+            
+            fetch('/api/items', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to post item');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reset form
+                document.getElementById('post-item-form').reset();
+                
+                showNotification('Item posted successfully');
+                showPanel('my-items'); // Switch to My Items panel
+            })
+            .catch(error => {
+                console.error('Error posting item:', error);
+                showNotification('Error posting item', 'error');
+            });
+        }
+        
+        // Edit item
+        function editItem(itemId) {
+            fetch(`/api/items/${itemId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to get item details');
+                    }
+                    return response.json();
+                })
+                .then(item => {
+                    // Fill the form with item details
+                    document.getElementById('item-title').value = item.title;
+                    document.getElementById('item-description').value = item.description;
+                    document.getElementById('item-price').value = item.price;
+                    document.getElementById('item-category').value = item.category;
+                    document.getElementById('item-condition').value = item.condition;
+                    
+                    // Change form action to update instead of create
+                    const form = document.getElementById('post-item-form');
+                    form.onsubmit = (e) => updateItem(e, itemId);
+                    
+                    // Switch to the post item panel
+                    showPanel('post-item');
+                })
+                .catch(error => {
+                    console.error('Error loading item for editing:', error);
+                    showNotification('Error loading item details', 'error');
+                });
+        }
+        
+        // Update item
+        function updateItem(event, itemId) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('item-title').value);
+            formData.append('description', document.getElementById('item-description').value);
+            formData.append('price', document.getElementById('item-price').value);
+            formData.append('category', document.getElementById('item-category').value);
+            formData.append('condition', document.getElementById('item-condition').value);
+            
+            const imageFile = document.getElementById('item-image').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+            
+            fetch(`/api/items/${itemId}`, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update item');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reset form and form action
+                document.getElementById('post-item-form').reset();
+                document.getElementById('post-item-form').onsubmit = submitItem;
+                
+                showNotification('Item updated successfully');
+                showPanel('my-items'); // Switch to My Items panel
+            })
+            .catch(error => {
+                console.error('Error updating item:', error);
+                showNotification('Error updating item', 'error');
+            });
+        }
+        
+        // Delete item
+        function deleteItem(itemId) {
+            if (!confirm('Are you sure you want to delete this item?')) {
+                return;
+            }
+            
+            fetch(`/api/items/${itemId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete item');
+                }
+                return response.json();
+            })
+            .then(data => {
+                showNotification('Item deleted successfully');
+                loadMyItems(); // Reload items to reflect the change
+            })
+            .catch(error => {
+                console.error('Error deleting item:', error);
+                showNotification('Error deleting item', 'error');
+            });
+        }
+        
+        // Update notification count
+        function updateNotificationCount() {
+            fetch('/api/notifications/unread')
+                .then(response => response.json())
+                .then(data => {
+                    const count = data.length;
+                    document.getElementById('notification-count').textContent = count;
+                    document.getElementById('notification-count').style.display = count > 0 ? 'inline-block' : 'none';
+                })
+                .catch(error => {
+                    console.error('Error updating notification count:', error);
+                });
+        }
+        
+        // View notifications
+        function viewNotifications() {
+            window.location.href = '/notifications.html';
+        }
+        
+        // Show notification message
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
+            notification.style.display = 'block';
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
     </script>
 </body>
 </html>
-

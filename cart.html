@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Cart - Buyer's Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .cart-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            color: #333;
+        }
+        
+        .cart-item {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 15px;
+        }
+        
+        .cart-item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        
+        .cart-item-details {
+            flex: 1;
+        }
+        
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        
+        .quantity-control button {
+            width: 25px;
+            height: 25px;
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .quantity-control input {
+            width: 40px;
+            height: 25px;
+            text-align: center;
+            margin: 0 5px;
+        }
+        
+        .remove-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .cart-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+        }
+        
+        .checkout-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        
+        .checkout-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #888;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Buyer's Hub - Shopping Cart</h1>
+        <div class="top-right">
+            <button onclick="location.href='buyershub.html'" class="auth-btn">Home</button>
+            <button onclick="viewNotifications()" class="auth-btn" id="notifications-btn">Notifications <span id="notification-count">0</span></button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="banner" style="font-weight: bold; font-size: 24px;">Your Shopping Cart</div>
+        <div id="cart-container" class="cart-container">
+            <div id="loading">Loading your cart...</div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <script>
+        // Check if user is logged in
+        function checkAuth() {
+            fetch('/api/user')
+                .then(response => {
+                    if (!response.ok) {
+                        alert('Please log in to view your cart');
+                        window.location.href = '/login.html';
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // User is logged in, load cart
+                    loadCart();
+                    updateNotificationCount();
+                })
+                .catch(error => {
+                    console.error('Authentication error:', error);
+                });
+        }
+        
+        // Load cart items
+        function loadCart() {
+            fetch('/api/cart')
+                .then(response => response.json())
+                .then(data => {
+                    const cartContainer = document.getElementById('cart-container');
+                    
+                    // Clear loading message
+                    cartContainer.innerHTML = '';
+                    
+                    if (!data.items || data.items.length === 0) {
+                        // Empty cart
+                        cartContainer.innerHTML = `
+                            <div class="empty-cart">
+                                <p>Your cart is empty</p>
+                                <button onclick="location.href='buyershub.html'" class="checkout-btn">Continue Shopping</button>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Display cart items
+                    let cartHTML = '';
+                    
+                    data.items.forEach(item => {
+                        cartHTML += `
+                            <div class="cart-item" data-id="${item.item_id}">
+                                <img src="${item.image_url || 'placeholder.jpg'}" alt="${item.title}" class="cart-item-image">
+                                <div class="cart-item-details">
+                                    <h3>${item.title}</h3>
+                                    <p>Price: $${item.price.toFixed(2)}</p>
+                                    <p>Total: $${item.total_price.toFixed(2)}</p>
+                                    <div class="cart-item-controls">
+                                        <div class="quantity-control">
+                                            <button onclick="updateQuantity(${item.item_id}, ${item.quantity - 1})">-</button>
+                                            <input type="number" value="${item.quantity}" min="1" max="10" onchange="updateQuantity(${item.item_id}, this.value)">
+                                            <button onclick="updateQuantity(${item.item_id}, ${item.quantity + 1})">+</button>
+                                        </div>
+                                        <button onclick="removeItem(${item.item_id})" class="remove-btn">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    // Add cart summary and checkout button
+                    cartHTML += `
+                        <div class="cart-summary">
+                            <h2>Order Summary</h2>
+                            <p><strong>Total Items:</strong> ${data.items.reduce((sum, item) => sum + item.quantity, 0)}</p>
+                            <p><strong>Total Price:</strong> $${data.totalPrice.toFixed(2)}</p>
+                            <button onclick="checkout()" class="checkout-btn">Proceed to Checkout</button>
+                        </div>
+                    `;
+                    
+                    cartContainer.innerHTML = cartHTML;
+                })
+                .catch(error => {
+                    console.error('Error loading cart:', error);
+                    document.getElementById('cart-container').innerHTML = `
+                        <div class="empty-cart">
+                            <p>Error loading your cart. Please try again.</p>
+                            <button onclick="loadCart()" class="checkout-btn">Retry</button>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Update item quantity
+        function updateQuantity(itemId, quantity) {
+            // Ensure quantity is within valid range
+            quantity = Math.max(1, Math.min(10, parseInt(quantity)));
+            
+            fetch(`/api/cart/${itemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update quantity');
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadCart(); // Reload cart
+                showNotification('Cart updated successfully!');
+            })
+            .catch(error => {
+                console.error('Error updating quantity:', error);
+                showNotification('Error updating cart. Please try again.', 'error');
+            });
+        }
+        
+        // Remove item from cart
+        function removeItem(itemId) {
+            fetch(`/api/cart/${itemId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to remove item');
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadCart(); // Reload cart
+                showNotification('Item removed from cart!');
+            })
+            .catch(error => {
+                console.error('Error removing item:', error);
+                showNotification('Error removing item. Please try again.', 'error');
+            });
+        }
+        
+        // Process checkout
+        function checkout() {
+            fetch('/api/orders', {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Checkout failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                showNotification('Order placed successfully!');
+                // Redirect to order confirmation page
+                setTimeout(() => {
+                    window.location.href = `/order-confirmation.html?id=${data.orderId}`;
+                }, 1500);
+            })
+            .catch(error => {
+                console.error('Error during checkout:', error);
+                showNotification('Checkout failed. Please try again.', 'error');
+            });
+        }
+        
+        // Update notification count
+        function updateNotificationCount() {
+            fetch('/api/notifications/unread')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('notification-count').textContent = data.length;
+                })
+                .catch(error => {
+                    console.error('Error updating notification count:', error);
+                });
+        }
+        
+        // Show notification message
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#4CAF50' : '#f44336';
+            notification.style.display = 'block';
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        // View notifications
+        function viewNotifications() {
+            window.location.href = '/notifications.html';
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
